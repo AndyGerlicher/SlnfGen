@@ -1,0 +1,8 @@
+<Project>
+    <PropertyGroup>
+        <RestoreSources>
+            https://dotnet.myget.org/F/msbuild/api/v3/index.json;
+            https://api.nuget.org/v3/index.json;
+        </RestoreSources>
+    </PropertyGroup>
+</Project>
