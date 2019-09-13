@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Build.Experimental.Graph;
 using Newtonsoft.Json;
 
@@ -11,7 +8,7 @@ namespace SlnfGen
 {
     public class SlnfGen
     {
-        private static string _slnDirectory;
+        private string _slnDirectory;
 
         public string Create(string dirsProj)
         {
@@ -19,46 +16,36 @@ namespace SlnfGen
             var relativeSlnPath = MakeRelative(Environment.CurrentDirectory, slnFullPath);
             _slnDirectory = Path.GetDirectoryName(slnFullPath);
 
-            // Load the graph and create the project.
-            // Note: We want to filter out traversal nodes (dirs.proj) and make all the paths relative
+            // Load the graph and create the anonymous type that matches the slnf file structure.
             var graph = new ProjectGraph(dirsProj);
             var sln = new
             {
                 solution = new
                 {
                     path = relativeSlnPath,
+                    // Note: Here we want to filter out traversal nodes (dirs.proj) and make all the paths relative
                     projects = graph.ProjectNodes.Where(NotTraversalNode).Select(RelativePathString).Distinct()
                 }
             };
 
+            // Make sure the sln file exists (it's a relative path from the slnf file)'
+            Console.WriteLine(!File.Exists(sln.solution.path)
+                ? $"Sln file doesn't exist: {sln.solution.path}"
+                : $"Using '{sln.solution.path}':");
 
-            // Make sure everything exists
-            if (!File.Exists(sln.solution.path))
-            {
-                Console.WriteLine($"Sln file doesn't exist: {sln.solution.path}");
-            }
-            else
-            {
-                Console.WriteLine($"Using '{sln.solution.path}':");
-            }
-
+            // Make sure all the projects exists relative to the .sln file (not relative to the slnf file)
             var originalDir = Environment.CurrentDirectory;
             Environment.CurrentDirectory = _slnDirectory;
 
             foreach (var file in sln.solution.projects)
             {
-                if (!File.Exists(file))
-                {
-                    Console.WriteLine($"Project file doesn't exist: {file}");
-                }
-                else
-                {
-                    Console.WriteLine($"  Discovered {file}");
-                }
+                Console.WriteLine(!File.Exists(file)
+                    ? $"Project file doesn't exist: {file}"
+                    : $"  Discovered {file}");
             }
-
             Environment.CurrentDirectory = originalDir;
 
+            // Serialize the anonymous type object to json
             var json = JsonConvert.SerializeObject(sln, Formatting.Indented);
             return json;
         }
@@ -69,7 +56,7 @@ namespace SlnfGen
             return !node.ProjectInstance.FullPath.Contains(".proj");
         }
 
-        private static string RelativePathString(ProjectGraphNode node)
+        private string RelativePathString(ProjectGraphNode node)
         {
             // Projects listed in the slnf need to be relative to the sln not the slnf file even
             // though the sln file is relative to the slnf location.
@@ -89,6 +76,8 @@ namespace SlnfGen
 
                 if (slns.Length > 1)
                 {
+                    // Pick the shortest one. In my test case I had MSBuild.sln and MSBuild.Dev.sln so I figured the
+                    // shorter one is maybe the right choice.
                     var sln = slns.ToList().OrderBy(s => s.Name.Length).First();
 
                     Console.WriteLine($"More than one sln found in {current.FullName}! Using {sln.Name}");
@@ -99,6 +88,7 @@ namespace SlnfGen
             }
         }
 
+        #region Some helper code copied from https://github.com/microsoft/msbuild
         /// <summary>
         /// Given the absolute location of a file, and a disc location, returns relative file path to that disk location. 
         /// Throws UriFormatException.
@@ -212,5 +202,6 @@ namespace SlnfGen
 
             return pathUri;
         }
+        #endregion
     }
 }

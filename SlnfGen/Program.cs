@@ -2,10 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Security.Policy;
-using Microsoft.Build.Experimental.Graph;
 using Microsoft.Build.Locator;
-using Newtonsoft.Json;
 
 namespace SlnfGen
 {
@@ -18,11 +15,20 @@ namespace SlnfGen
                 var instance = MSBuildLocator.QueryVisualStudioInstances().First();
                 MSBuildLocator.RegisterInstance(instance);
 
-                var dirsProj = args.Length == 1 ? args[0] : "dirs.proj";
+                var dirsProj = args.Length > 0 ? args[0] : "dirs.proj";
                 var slnfFile = Path.ChangeExtension(dirsProj, ".slnf");
                 File.WriteAllText(slnfFile, new SlnfGen().Create(dirsProj));
 
-                Process.Start(Path.Combine(instance.VisualStudioRootPath, "Common7", "IDE", "devenv.exe"), slnfFile);
+                if (args.Length > 1 && args[1] == "novs")
+                {
+                    Console.WriteLine($"Wrote {slnfFile}");
+                }
+                else
+                {
+                    var vsPath = Path.Combine(instance.VisualStudioRootPath, "Common7", "IDE", "devenv.exe");
+                    Console.WriteLine($"{vsPath} {slnfFile}");
+                    Process.Start(vsPath, slnfFile);
+                }
             }
             catch (Exception e)
             {
