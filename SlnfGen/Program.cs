@@ -17,9 +17,11 @@ namespace SlnfGen
 
                 var dirsProj = args.Length > 0 ? args[0] : "dirs.proj";
                 var slnfFile = Path.ChangeExtension(dirsProj, ".slnf");
-                File.WriteAllText(slnfFile, new SlnfGen().Create(dirsProj));
+                var slnFile = args.FirstOrDefault(arg => arg.EndsWith(".sln"));
 
-                if (args.Length > 1 && args[1] == "novs")
+                File.WriteAllText(slnfFile, new SlnfGen().Create(dirsProj, slnFile));
+
+                if (args.Any(arg=>arg == "novs"))
                 {
                     Console.WriteLine($"Wrote {slnfFile}");
                 }

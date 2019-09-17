@@ -10,9 +10,12 @@ namespace SlnfGen
     {
         private string _slnDirectory;
 
-        public string Create(string dirsProj)
+        public string Create(string dirsProj, string slnFile)
         {
-            var slnFullPath = GetSlnAbove(Directory.GetCurrentDirectory());
+            var slnFullPath = slnFile == null
+                ? GetSlnAbove(Directory.GetCurrentDirectory())
+                : Path.GetFullPath(slnFile);
+
             var relativeSlnPath = MakeRelative(Environment.CurrentDirectory, slnFullPath);
             _slnDirectory = Path.GetDirectoryName(slnFullPath);
 
