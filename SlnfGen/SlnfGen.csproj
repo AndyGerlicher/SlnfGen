@@ -11,7 +11,7 @@
     <PackageReference Include="Microsoft.Build" Version="$(MSBuildNugetVersion)" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Framework" Version="$(MSBuildNugetVersion)" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Locator" Version="1.2.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
 </Project>
